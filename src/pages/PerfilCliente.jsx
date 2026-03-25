@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { localClient } from "@/api/localClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -48,7 +48,7 @@ export default function PerfilCliente() {
   const { data: cliente, isLoading: loadingCliente } = useQuery({
     queryKey: ['cliente', cpf],
     queryFn: async () => {
-      const clientes = await base44.entities.Cliente.list();
+      const clientes = await localClient.getClientes();
       return clientes.find(c => c.cpf === cpf);
     },
     enabled: !!cpf
@@ -57,7 +57,7 @@ export default function PerfilCliente() {
   const { data: ordens, isLoading: loadingOrdens } = useQuery({
     queryKey: ['ordens-cliente', cpf],
     queryFn: async () => {
-      const ordens = await base44.entities.OrdemServico.list('-created_date');
+      const ordens = await localClient.getOrdens();
       return ordens.filter(o => o.cliente_cpf === cpf);
     },
     enabled: !!cpf,
@@ -71,7 +71,7 @@ export default function PerfilCliente() {
   }, [cliente]);
 
   const updateComentariosMutation = useMutation({
-    mutationFn: ({ id, comentarios }) => base44.entities.Cliente.update(id, { comentarios_privados: comentarios }),
+    mutationFn: ({ id, comentarios }) => localClient.updateCliente(id, { comentarios_privados: comentarios }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cliente', cpf] });
       toast.success("Comentários salvos com sucesso!");
@@ -82,7 +82,7 @@ export default function PerfilCliente() {
   });
 
   const deleteClienteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Cliente.delete(id),
+    mutationFn: (id) => localClient.deleteCliente(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       toast.success("Cliente deletado com sucesso!");

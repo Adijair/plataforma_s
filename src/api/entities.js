@@ -1,13 +1,24 @@
-import { base44 } from './base44Client';
+import { localClient } from './localClient';
 
+export const Cliente = {
+  list: () => localClient.getClientes(),
+  create: (data) => localClient.createCliente(data),
+  update: (id, data) => localClient.updateCliente(id, data),
+  delete: (id) => localClient.deleteCliente(id),
+};
 
-export const Cliente = base44.entities.Cliente;
+export const OrdemServico = {
+  list: () => localClient.getOrdens(),
+  create: (data) => localClient.createOrdem(data),
+  update: (id, data) => localClient.updateOrdem(id, data),
+  delete: (id) => localClient.deleteOrdem(id),
+};
 
-export const OrdemServico = base44.entities.OrdemServico;
+export const Configuracao = {
+  list: () => localClient.getConfiguracoes(),
+  create: (data) => localClient.createConfiguracao(data),
+  update: (id, data) => localClient.updateConfiguracao(id, data),
+  delete: (id) => localClient.deleteConfiguracao(id),
+};
 
-export const Configuracao = base44.entities.Configuracao;
-
-
-
-// auth sdk:
-export const User = base44.auth;
+export const User = null; // auth not used for local mode

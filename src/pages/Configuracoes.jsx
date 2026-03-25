@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { localClient } from "@/api/localClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ export default function Configuracoes() {
   const { data: config } = useQuery({
     queryKey: ['config'],
     queryFn: async () => {
-      const configs = await base44.entities.Configuracao.list();
+      const configs = await localClient.getConfiguracoes();
       return configs[0] || null;
     }
   });
@@ -48,9 +48,9 @@ export default function Configuracoes() {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (config) {
-        return base44.entities.Configuracao.update(config.id, data);
+        return localClient.updateConfiguracao(config.id, data);
       } else {
-        return base44.entities.Configuracao.create(data);
+        return localClient.createConfiguracao(data);
       }
     },
     onSuccess: () => {
@@ -68,7 +68,7 @@ export default function Configuracoes() {
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await localClient.uploadFile(file);
       setFormData(prev => ({ ...prev, logo_url: file_url }));
       toast.success("Logo carregada!");
     } catch (error) {
@@ -89,9 +89,9 @@ export default function Configuracoes() {
   const handleBackup = async () => {
     setDownloadingBackup(true);
     try {
-      const ordens = await base44.entities.OrdemServico.list();
-      const clientes = await base44.entities.Cliente.list();
-      const configs = await base44.entities.Configuracao.list();
+      const ordens = await localClient.getOrdens();
+      const clientes = await localClient.getClientes();
+      const configs = await localClient.getConfiguracoes();
 
       const backupData = {
         data_backup: new Date().toISOString(),
@@ -147,11 +147,11 @@ export default function Configuracoes() {
       for (const cliente of backupData.clientes) {
         try {
           const { id, created_date, updated_date, created_by, ...clienteData } = cliente;
-          const clientesExistentes = await base44.entities.Cliente.list();
+          const clientesExistentes = await localClient.getClientes();
           const existe = clientesExistentes.find(c => c.cpf === clienteData.cpf);
           
           if (!existe) {
-            await base44.entities.Cliente.create(clienteData);
+            await localClient.createCliente(clienteData);
             importados++;
           }
         } catch (error) {
@@ -163,7 +163,7 @@ export default function Configuracoes() {
       for (const ordem of backupData.ordens_servico) {
         try {
           const { id, created_date, updated_date, created_by, ...ordemData } = ordem;
-          await base44.entities.OrdemServico.create(ordemData);
+          await localClient.createOrdem(ordemData);
           importados++;
         } catch (error) {
           console.error("Erro ao importar OS:", error);
@@ -176,9 +176,9 @@ export default function Configuracoes() {
         const { id, created_date, updated_date, created_by, ultimo_numero_os, ...configData } = configBackup;
         
         if (config) {
-          await base44.entities.Configuracao.update(config.id, configData);
+          await localClient.updateConfiguracao(config.id, configData);
         } else {
-          await base44.entities.Configuracao.create(configData);
+          await localClient.createConfiguracao(configData);
         }
       }
 

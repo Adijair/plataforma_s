@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { localClient } from "@/api/localClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -69,7 +69,7 @@ export default function VisualizarOS() {
   const { data: ordem, isLoading } = useQuery({
     queryKey: ['ordem', osId],
     queryFn: async () => {
-      const ordens = await base44.entities.OrdemServico.list();
+      const ordens = await localClient.getOrdens();
       return ordens.find(o => o.id === osId);
     },
     enabled: !!osId
@@ -78,7 +78,7 @@ export default function VisualizarOS() {
   const { data: config } = useQuery({
     queryKey: ['config'],
     queryFn: async () => {
-      const configs = await base44.entities.Configuracao.list();
+      const configs = await localClient.getConfiguracoes();
       return configs[0] || null;
     }
   });
@@ -104,7 +104,7 @@ export default function VisualizarOS() {
   }, [ordem]);
 
   const saveChangesMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.OrdemServico.update(id, data),
+    mutationFn: ({ id, data }) => localClient.updateOrdem(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ordem', osId] });
       queryClient.invalidateQueries({ queryKey: ['ordens'] });
@@ -117,7 +117,7 @@ export default function VisualizarOS() {
   });
 
   const deleteOSMutation = useMutation({
-    mutationFn: (id) => base44.entities.OrdemServico.delete(id),
+    mutationFn: (id) => localClient.deleteOrdem(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ordens'] });
       queryClient.invalidateQueries({ queryKey: ['ordens-cliente'] });

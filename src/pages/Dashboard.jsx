@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { localClient } from "@/api/localClient";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   const { data: ordens, isLoading } = useQuery({
     queryKey: ['ordens'],
-    queryFn: () => base44.entities.OrdemServico.list('-created_date'),
+    queryFn: () => localClient.getOrdens(),
     initialData: [],
   });
 

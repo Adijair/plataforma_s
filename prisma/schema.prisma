@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Cliente {
+  id        Int           @id @default(autoincrement())
+  cpf       String?       @unique
+  nome      String
+  telefone  String?
+  email     String?
+  endereco  String?
+  numero    String?
+  complemento String?
+  cep       String?
+  data_cadastro DateTime?
+  comentarios_privados String?
+  ordens    OrdemServico[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model OrdemServico {
+  id         Int      @id @default(autoincrement())
+  numero_os  String?  @unique
+  clienteId  Int
+  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  titulo     String
+  descricao  String?
+  status     String   @default("Aberta")
+  prioridade String   @default("Media")
+  checklist  Json?
+  fotos      Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Configuracao {
+  id    Int    @id @default(autoincrement())
+  chave String @unique
+  valor String
+}

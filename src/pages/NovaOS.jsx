@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { localClient } from "@/api/localClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -41,15 +41,15 @@ export default function NovaOS() {
 
   const { data: clientes } = useQuery({
     queryKey: ['clientes'],
-    queryFn: () => base44.entities.Cliente.list(),
+    queryFn: () => localClient.getClientes(),
     initialData: [],
   });
 
   const { data: config } = useQuery({
     queryKey: ['config'],
     queryFn: async () => {
-      const configs = await base44.entities.Configuracao.list();
-      return configs[0] || null;
+      const configs = await localClient.getConfiguracoes();
+      return configs.find(c => c.chave === 'ultimo_numero_os') || null;
     }
   });
 
@@ -63,21 +63,21 @@ export default function NovaOS() {
   const createOSMutation = useMutation({
     mutationFn: async (data) => {
       // Gerar número sequencial da OS
-      const configs = await base44.entities.Configuracao.list();
-      const config = configs[0];
-      const ultimoNumero = config?.ultimo_numero_os || 0;
+      const configs = await localClient.getConfiguracoes();
+      const config = configs.find(c => c.chave === 'ultimo_numero_os');
+      const ultimoNumero = config ? parseInt(config.valor) : 0;
       const novoNumero = ultimoNumero + 1;
       const numeroOS = String(novoNumero).padStart(4, '0');
       
       // Atualizar configuração com novo número
       if (config) {
-        await base44.entities.Configuracao.update(config.id, { ultimo_numero_os: novoNumero });
+        await localClient.updateConfiguracao(config.id, { chave: 'ultimo_numero_os', valor: novoNumero.toString() });
       } else {
-        await base44.entities.Configuracao.create({ ultimo_numero_os: novoNumero });
+        await localClient.createConfiguracao({ chave: 'ultimo_numero_os', valor: novoNumero.toString() });
       }
       
       // Criar OS com número
-      return base44.entities.OrdemServico.create({ ...data, numero_os: numeroOS });
+      return localClient.createOrdem({ ...data, numero_os: numeroOS });
     },
     onSuccess: (newOS) => {
       queryClient.invalidateQueries({ queryKey: ['ordens'] });
@@ -111,7 +111,7 @@ export default function NovaOS() {
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await localClient.uploadFile(file);
       setFormData(prev => ({
         ...prev,
         fotos: [...prev.fotos, file_url]

@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { FileText, Users, Settings, Printer, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { localClient } from "@/api/localClient";
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
@@ -11,7 +11,7 @@ export default function Layout({ children, currentPageName }) {
   const { data: config } = useQuery({
     queryKey: ['config'],
     queryFn: async () => {
-      const configs = await base44.entities.Configuracao.list();
+      const configs = await localClient.getConfiguracoes();
       return configs[0] || null;
     }
   });
